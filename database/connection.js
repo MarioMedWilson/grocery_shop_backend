@@ -10,6 +10,8 @@ const sequelize = new Sequelize(
     host: process.env.DATABASE_HOST,
     dialect: process.env.DATABASE_DIALECT,
     port: process.env.DATABASE_PORT,
+    protocol: 'postgres',
+    logging:  true
   }
 );
 
