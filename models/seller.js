@@ -92,17 +92,17 @@ Seller.prototype.verifEmail = async function (data){
     const mailOptions = {
       from: 'Mario Medhat <mario.m.wilson2001@gmail.com>',
       to: data.email,
-      subject: 'Verify Your Account',
+      subject: 'Verify Your Account Seller',
       html: `<!DOCTYPE html>
       <html>
       <body>
         <p>Dear Mr./Ms.</p>
         <p>Thank you for signing up with our service. To complete your registration, of User <strong> ${data.name}</strong>
         please click the link below to verify your email address:</p>
-        <p><a href="${`${api}/admin/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
+        <p><a href="${`${api}/seller/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
         <p>If you did not sign up for this service, you can safely ignore this email.</p>
         <p>Best regards,</p>
-        <p>Karma Clinic</p>
+        <p>Grocery Shop</p>
       </body>
       </html>`,
     };

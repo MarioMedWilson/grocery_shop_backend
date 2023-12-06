@@ -75,9 +75,64 @@ const resendVerifiy = async (req, res)=> {
   return res.status(200).json({message: "Email send, please check also the spam."});
 };
 
+const updateSeller = async (req, res) => {
+  const { name, email, password, confirmPassword } = req.body;
+  const { id } = req.sellerId;
+  try {
+    const seller = await Seller.findByPk(req.sellerId);
+    if (!seller) {
+      res.status(404).json({ message: "Seller not found." });
+      return;
+    }
+    if (name) {
+      seller.name = name;
+    }
+    if (seller.email != email){
+      res.status(401).json({ message: "Email is not the same" });
+      return;
+    };
+    if (password != confirmPassword){
+      res.status(401).json({ message: "Password and confirm password are not the same" });
+      return;
+    };
+    seller.password = password;
+    await seller.save();
+    res.status(200).json({ message: "Seller updated", seller });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to update seller" });
+  }
+}
+
+const deleteSeller = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const seller = await Seller.findByPk(req.sellerId);
+    if (!seller) {
+      res.status(404).json({ message: "Seller not found." });
+      return;
+    };
+    if (seller.email != email){
+      res.status(401).json({ message: "Email is not the same" });
+      return;
+    }
+    const isPasswordValid = seller.validPassword(password);
+    if (!isPasswordValid) {
+      res.status(401).json({ message: "Incorrect password" });
+      return;
+    }
+    await seller.destroy();
+    return res.status(200).json({ message: "Seller deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to delete seller" });
+  }
+};
+
 export default {
   signUp,
   logIn,
   verifEmail,
   resendVerifiy,
+  updateSeller,
+  deleteSeller
 }

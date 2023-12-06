@@ -92,7 +92,7 @@ User.prototype.verifEmail = async function (data){
     const mailOptions = {
       from: 'Mario Medhat <mario.m.wilson2001@gmail.com>',
       to: data.email,
-      subject: 'Verify Your Account',
+      subject: 'Verify Your Account User',
       html: `<!DOCTYPE html>
       <html>
       <body>
