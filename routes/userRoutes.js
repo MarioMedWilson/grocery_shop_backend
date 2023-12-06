@@ -17,6 +17,7 @@ userRouter.post('/signup', user.signUp);
 userRouter.post('/login', user.logIn);
 userRouter.get('/verify/:code', user.verifEmail);
 userRouter.get('/resend-verify', user.resendVerifiy);
+userRouter.put('/update-user', authUser, user.updateUser);
 
 // Products
 userRouter.get('/all-products', product.showProducts);

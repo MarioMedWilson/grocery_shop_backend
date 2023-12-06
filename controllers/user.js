@@ -77,9 +77,45 @@ const resendVerifiy = async (req, res)=> {
   return res.status(200).json({message: "Email send, please check also the spam."});
 };
 
+const updateUser = async (req, res) => {
+  const { name, email, password, confirmPassword } = req.body;
+  try {
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    };
+    if (password != confirmPassword){
+      res.status(401).json({ message: "Password and confirm password are not the same" });
+      return;
+    };
+    if (user.verifyToken != null){
+      res.status(401).json({ message: "Email is not verified" });
+      return;
+    }
+    if (user.email != email){
+      res.status(401).json({ message: "Email is not the same" });
+      return;
+    };
+    if (name){
+      user.name = name;
+      await user.save();
+    }
+    if (password){
+      user.password = password;
+      await user.save();
+    }
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to update user" });
+  }
+};
+
 export default {
   signUp,
   logIn,
   verifEmail,
   resendVerifiy,
+  updateUser,
 }
