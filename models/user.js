@@ -102,7 +102,7 @@ User.prototype.verifEmail = async function (data){
         <p><a href="${`${api}/user/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
         <p>If you did not sign up for this service, you can safely ignore this email.</p>
         <p>Best regards,</p>
-        <p>Karma Clinic</p>
+        <p>Grocery Shop</p>
       </body>
       </html>`,
     };

@@ -107,8 +107,31 @@ const updateUser = async (req, res) => {
     }
     res.status(200).json({ message: "User updated successfully", user });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update user" });
+    return res.status(500).json({ message: "Failed to update user" });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    };
+    if (user.email != email){
+      res.status(401).json({ message: "Email is not the same" });
+      return;
+    }
+    const isPasswordValid = user.validPassword(password);
+    if (!isPasswordValid) {
+      res.status(401).json({ message: "Incorrect password" });
+      return;
+    }
+    await user.destroy();
+    return res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to delete user" });
   }
 };
 
@@ -118,4 +141,5 @@ export default {
   verifEmail,
   resendVerifiy,
   updateUser,
+  deleteUser
 }

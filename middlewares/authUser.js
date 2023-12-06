@@ -30,6 +30,7 @@ export const authUser = async (req, res, next) => {
     req.userId = user.id;
     return next();
   } catch (error) {
+    console.error(error);
     return res.status(401).json("Invalid token!");
   }
 };
