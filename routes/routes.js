@@ -1,10 +1,14 @@
 import express from "express";
+import { Router } from 'express';
 import adminRouter from './sellerRoutes.js';
 import userRouter from './userRoutes.js';
 
-const routes = express();
-routes.use('/user', userRouter);
-routes.use('/seller', adminRouter);
+import countries from "../controllers/countries.js";
 
+const app = express();
 
-export default routes;
+app.use('/user', userRouter);
+app.use('/seller', adminRouter);
+app.get('/countries', countries.countriesData);
+
+export default app;
