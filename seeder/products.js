@@ -1,4 +1,4 @@
-import Product from "../models/product.js";
+import client from "../database/connection.js";
 
 const productsData = [
   { product_name: "Banana", brand_name: "Fruits", brandNationalityId: 50, price: 10, quantityInStock: 100, sellerId: 1},
@@ -30,15 +30,23 @@ const productsData = [
   { product_name: "Chicken", brand_name: "Meat", brandNationalityId: 25, price: 20, quantityInStock: 26, sellerId: 1},
 ]
 
+
 const seedProducts = async () => {
   try {
-    await Product.sync();
-    await Product.bulkCreate(productsData);
-    console.log('Products seeded successfully.');
+    for (const product of productsData) {
+      var { product_name, brand_name, brandNationalityId, price, quantityInStock, sellerId } = product;
+      const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      const updatedAt = createdAt;
+      const query = `
+        INSERT INTO products ("product_name", "brand_name", "brandNationalityId", "price", "quantityInStock", "sellerId", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `;
+      await client.query(query, [product_name, brand_name, brandNationalityId, price, quantityInStock, sellerId, createdAt, updatedAt]);
+    }
+
+    console.log("Products seeded successfully!");
   } catch (error) {
-    console.error('Error seeding Product:', error);
-  } finally {
-    await Product.sequelize.close();
+    console.error("Error seeding products:", error);
   }
 };
 

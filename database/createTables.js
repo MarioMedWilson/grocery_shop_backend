@@ -1,56 +1,76 @@
-import sequelize from "./connection.js";
-import User from "../models/user.js";
-import Product from "../models/product.js";
+// Used to create tables in the database
+import client from "./connection.js";
 
-import Cart from "../models/cart.js";
-import CartItem from "../models/cartItems.js";
 
-import { Sequelize } from "sequelize";
-import Seller from "../models/seller.js";
-import BrandNationality from "../models/nationality.js";
-
-const createTables = () => {
-  sequelize
-    .sync({ force: true })
-    .then(() => {
-      console.log("Tables have been created");
-      // const queryInterface = sequelize.getQueryInterface();
-      // seed.up(queryInterface, Sequelize);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+const createTables = async () => {
+  try {
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "brand_nationalities" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR(100) NOT NULL UNIQUE,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "sellers" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR(100) NOT NULL,
+        "email" VARCHAR(100) NOT NULL UNIQUE,
+        "password" VARCHAR(100) NOT NULL,
+        "verifyToken" VARCHAR(100),
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "users" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR(100) NOT NULL,
+        "email" VARCHAR(100) NOT NULL UNIQUE,
+        "password" VARCHAR(100) NOT NULL,
+        "verifyToken" VARCHAR(100),
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "products" (
+        "id" SERIAL PRIMARY KEY,
+        "product_name" VARCHAR(100) NOT NULL,
+        "brand_name" VARCHAR(100) NOT NULL,
+        "quantityInStock" INTEGER NOT NULL,
+        "price" DECIMAL(10,3) NOT NULL,
+        "sellerId" INTEGER REFERENCES "sellers"("id"),
+        "brandNationalityId" INTEGER REFERENCES "brand_nationalities"("id"),
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "shopping_carts" (
+        "id" SERIAL PRIMARY KEY,
+        "totalPrice" INTEGER NOT NULL,
+        "userId" INTEGER REFERENCES "users"("id"),
+        "payment" BOOLEAN DEFAULT FALSE,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS "shopping_cart_items" (
+        "id" SERIAL PRIMARY KEY,
+        "productId" INTEGER REFERENCES "products"("id"),
+        "shoppingCartId" INTEGER REFERENCES "shopping_carts"("id"),
+        "quantity" INTEGER NOT NULL,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )`
+    );
+    console.log("Tables created successfully!");
+    } catch (error) {
+    console.log(error);
+  }
 };
-
-// Purchase.belongsTo(User, { foreignKey: "user_id", as: "user" });
-// User.hasMany(Purchase, { foreignKey: "user_id", as: "purchases" });
-
-// Cart.belongsTo(User, {foreignKey: "user_id", as: "user"});
-// User.hasMany(Cart, {foreignKey: "user_id", as: "cart"});
-
-// Product.belongsTo(User, {foreignKey: "user_id", as: "user"});
-// User.hasMany(Product, {foreignKey: "user_id", as: "product"});
-
-// Product.belongsTo(Cart, {foreignKey: "product_id", as: "cart"});
-// Cart.hasMany(Product, {foreignKey: "product_id", as: "product"});
-
-// Purchase.belongsTo(Product, { foreignKey: "product_id", as: "product" });
-// Product.hasMany(Purchase, { foreignKey: "product_id", as: "purchases" });
-
-User.hasMany(Cart);
-Cart.belongsTo(User);
-
-
-Cart.hasMany(CartItem);
-CartItem.belongsTo(Cart);
-
-Product.hasMany(CartItem);
-CartItem.belongsTo(Product);
-
-BrandNationality.hasMany(Product);
-Product.belongsTo(BrandNationality);
-
-Seller.hasMany(Product);
-Product.belongsTo(Seller);
 
 export default createTables;

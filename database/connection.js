@@ -1,16 +1,20 @@
-import { Sequelize } from "sequelize";
+
+import pkg from 'pg';
+const { Client } = pkg;
+
 import dotenv from "dotenv";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const sequelize = new Sequelize({
-    database: process.env.DATABASE_NAME,
-    username: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    host: process.env.DATABASE_HOST,
-    dialect: process.env.DATABASE_DIALECT,
-    port: process.env.DATABASE_PORT,
-    ssl: true
-  }
-);
+const client = new Client({
+  user: process.env.DATABASE_USER,
+  host: process.env.DATABASE_HOST,
+  database: process.env.DATABASE_NAME,
+  password: process.env.DATABASE_PASSWORD,
+  port: process.env.DATABASE_PORT,
+});
 
-export default sequelize;
+client.connect();
+
+
+
+export default client;

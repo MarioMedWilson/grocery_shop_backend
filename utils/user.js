@@ -1,61 +1,27 @@
-import { DataTypes } from "sequelize";
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {google} from 'googleapis';
 import nodemailer from 'nodemailer';
 
-import sequelize from "../database/connection.js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const JWT_SECRET = process.env.JWT_SECRET_ADMIN;
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const Seller = sequelize.define("seller", {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  verifyToken: {
-    type: DataTypes.STRING
-  }
-}, {
-  hooks: {
-    beforeSave: async (seller) => {
-      if (seller.changed("password")) {
-        const salt = await bcrypt.genSaltSync(10);
-        seller.password = bcrypt.hashSync(seller.password, salt);
-      }
-    },
-    afterUpdate: async (seller) => {
-      if (seller.changed("password")) {
-        const salt = await bcrypt.genSaltSync(10);
-        seller.password = bcrypt.hashSync(seller.password, salt);
-      }
-    },
-  },
-});
-
-Seller.prototype.validPassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
+const changePassword = async (password) => {
+  const salt = await bcrypt.genSaltSync(10);
+  password = bcrypt.hashSync(password, salt);
+  return password;
 };
 
-Seller.prototype.generateToken = function(){
+const validPassword =  (user, password) => {
+  return bcrypt.compareSync(password, user.password);
+};
+
+const generateToken = (id) => {
   const payload = {
-    id: this.id,
+    id: id,
   };
   const token = jwt.sign(payload, JWT_SECRET, {
     expiresIn: '1h',
@@ -63,7 +29,7 @@ Seller.prototype.generateToken = function(){
   return token
 }
 
-Seller.prototype.verifEmail = async function (data){
+const verifEmail = async function (data){
   const api = process.env.API_BASE_URL;
   const CLIENT_ID = process.env.CLIENT_ID;
   const CLEINT_SECRET = process.env.CLEINT_SECRET;
@@ -92,14 +58,14 @@ Seller.prototype.verifEmail = async function (data){
     const mailOptions = {
       from: 'Mario Medhat <mario.m.wilson2001@gmail.com>',
       to: data.email,
-      subject: 'Verify Your Account Seller',
+      subject: 'Verify Your Account User',
       html: `<!DOCTYPE html>
       <html>
       <body>
         <p>Dear Mr./Ms.</p>
         <p>Thank you for signing up with our service. To complete your registration, of User <strong> ${data.name}</strong>
         please click the link below to verify your email address:</p>
-        <p><a href="${`${api}/seller/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
+        <p><a href="${`${api}/user/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
         <p>If you did not sign up for this service, you can safely ignore this email.</p>
         <p>Best regards,</p>
         <p>Grocery Shop</p>
@@ -114,7 +80,10 @@ Seller.prototype.verifEmail = async function (data){
   }
 };
 
-// const token = user.generateToken();
-// console.log(token);
 
-export default Seller;
+export default {
+  generateToken,
+  verifEmail,
+  validPassword,
+  changePassword
+};

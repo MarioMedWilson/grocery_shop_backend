@@ -1,4 +1,4 @@
-import BrandNationality from '../models/nationality.js';
+import client from "../database/connection.js";
 
 const countries = [
   { name: 'Afghanistan' },
@@ -199,17 +199,25 @@ const countries = [
 ];
 
 
+
 const seedCountries = async () => {
   try {
-    await BrandNationality.sync();
-    await BrandNationality.bulkCreate(countries);
+    for (const country of countries) {
+      const { name } = country;
+      const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      const updatedAt = createdAt;
+      const query = `
+        INSERT INTO "brand_nationalities" ("name", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3)
+      `;
+      await client.query(query, [name, createdAt, updatedAt]);
+    }
 
-    console.log('Countries seeded successfully.');
+    console.log("Countries seeded successfully!");
   } catch (error) {
-    console.error('Error seeding countries:', error);
-  } finally {
-    await BrandNationality.sequelize.close();
+    console.error("Error seeding countries:", error);
   }
 };
+
 
 export default seedCountries;

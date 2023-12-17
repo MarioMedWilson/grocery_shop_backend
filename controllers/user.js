@@ -1,18 +1,30 @@
-import User from "../models/user.js";
-import cryptoRandomString from 'crypto-random-string';
 
+import cryptoRandomString from 'crypto-random-string';
+import userModule from "../utils/user.js";
+
+const { generateToken, verifEmail, validPassword, changePassword } = userModule;
+import client from "../database/connection.js";
 import bcrypt from "bcrypt";
 
 
 const signUp = async (req, res) => {
-  const { name, email, password } = req.body;
+  const user = req.body;
   try {
     const verifyToken = await cryptoRandomString({length: 100});
-    
-    const user = await User.create({ name, email, password, verifyToken });
-    // const token = user.generateToken();
-
-    user.verifEmail(user);
+    user.verifyToken = verifyToken;
+    user.password = await changePassword(user.password);
+    const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const updatedAt = createdAt;
+    await client.query(
+      `INSERT INTO "users" ("name", "email", "password", "verifyToken", "createdAt", "updatedAt") VALUES (
+        '${user.name}', 
+        '${user.email}', 
+        '${user.password}', 
+        '${user.verifyToken}',
+        '${createdAt}',
+        '${updatedAt}')`
+    );
+    verifEmail(user);
     res.status(200).json({ message: "Please check your email.", user });
   } catch (error) {
     console.error(error);
@@ -25,87 +37,101 @@ const signUp = async (req, res) => {
 const logIn = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      res.status(404).json({ message: "User not found. Please sign up" });
-      return;
+    const user = await client.query(
+      `SELECT * FROM "users" WHERE "email"='${email}'`
+    );
+    if (user.rows[0] == null){
+      return res.status(404).json({message: "User not found. Please sign up"})
     }
-    // const isPasswordValid = bcrypt.compareSync(password, user.password);
-    const isPasswordValid = user.validPassword(password);
+    const isPasswordValid = validPassword(user.rows[0], password);
     if (!isPasswordValid) {
       res.status(401).json({ message: "Invalid password" });
       return;
     }
-    if (user.verifyToken != null){
+    if (user.rows[0].verifyToken != null){
       res.status(401).json({ message: "Email is not verified" });
       return;
     }
-
-    const token = user.generateToken();
-    res.json({ message: "Login successful", user, token });
+    const token = generateToken(user.rows[0].id);
+    return res.json({ message: "Login successful", user: user.rows[0], token });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to log in" });
+    return res.status(500).json({ message: "Failed to log in" });
   }
-};
+}
 
-const verifEmail = async (req, res) => {
+
+const receviedVerifyEmail = async (req, res) => {
   const code = req.params.code
-  const user = await User.findOne({ where: { verifyToken: code } });
-  if (user === null){
+  try{
+    const user = await client.query(
+      `SELECT * FROM "users" WHERE "verifyToken"='${code}'`
+    );
+    if (user.rows[0] == null){
+      return res.status(401).json({message: "No User found."})
+    }
+    user.rows[0].verifyToken = null;
+    await client.query(
+      `UPDATE "users" SET "verifyToken"=null WHERE "verifyToken"='${code}'`
+    );
+    return res.status(200).json({message: "Successfully verifived the email."});
+  }catch (error){
+    console.log(error);
     return res.status(401).json({message: "No User found."})
   }
-  user.verifyToken = null;
-  await user.save();
-  return res.status(200).json({message: "Successfully verifived the email"});
-};
+}
 
-const resendVerifiy = async (req, res)=> {
+const resendVerifiyEmail = async (req, res)=> {
   const { email } = req.body;
   if (!email){
     return res.status(404).json({message: "Please insert the email."})
   }
-  const user = await User.findOne({ where: { email } });
-  if (user == null){
+  const user = await client.query(
+    `SELECT * FROM "users" WHERE "email"='${email}'`
+  );
+  if (user.rows[0] == null){
     return res.status(404).json({message: "No email found."})
   }
-  if (user.verifyToken==null){
+  if (user.rows[0].verifyToken==null){
     return res.status(200).json({message: "User email is already verified."})
   }
-  user.verifEmail(user);
+  verifEmail(user.rows[0]);
   return res.status(200).json({message: "Email send, please check also the spam."});
 };
 
 const updateUser = async (req, res) => {
-  const { name, email, password, confirmPassword } = req.body;
+  var { name, email, password, confirmPassword } = req.body;
   try {
-    const user = await User.findByPk(req.userId);
-    if (!user) {
-      res.status(404).json({ message: "User not found." });
-      return;
+    const user = await client.query(
+      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+    );
+    if (user.rows[0] == null){
+      return res.status(404).json({ message: "User not found." });
     };
     if (password != confirmPassword){
-      res.status(401).json({ message: "Password and confirm password are not the same" });
-      return;
+      return res.status(401).json({ message: "Password and confirm password are not the same" });
     };
-    if (user.verifyToken != null){
-      res.status(401).json({ message: "Email is not verified" });
-      return;
+    if (user.rows[0].verifyToken != null){
+      return res.status(401).json({ message: "Email is not verified" });
     }
-    if (user.email != email){
-      res.status(401).json({ message: "Email is not the same" });
-      return;
+    if (user.rows[0].email != email){
+      return res.status(401).json({ message: "Email is not the same" });
     };
     if (name){
-      user.name = name;
-      await user.save();
+      await client.query(
+        `UPDATE "users" SET "name"='${name}' WHERE "id"='${req.userId}'`
+      );
     }
     if (password){
-      user.password = password;
-      await user.save();
+      password = await changePassword(password);
+      await client.query(
+        `UPDATE "users" SET "password"='${password}' WHERE "id"='${req.userId}'`
+      );
     }
-    res.status(200).json({ message: "User updated successfully", user });
+    const updatedUser = await client.query(
+      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+    );
+    return res.status(200).json({ message: "User updated successfully", user: updatedUser.rows[0] });
   } catch (error) {
     return res.status(500).json({ message: "Failed to update user" });
   }
@@ -114,32 +140,34 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findByPk(req.userId);
-    if (!user) {
-      res.status(404).json({ message: "User not found." });
-      return;
+    const user = await client.query(
+      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+    );
+    if (user.rows[0] == null){
+      return res.status(404).json({ message: "User not found." });
     };
-    if (user.email != email){
-      res.status(401).json({ message: "Email is not the same" });
-      return;
+    if (user.rows[0].email != email){
+      return res.status(401).json({ message: "Email is not the same" });
     }
-    const isPasswordValid = user.validPassword(password);
+    const isPasswordValid = validPassword(user.rows[0], password);
     if (!isPasswordValid) {
-      res.status(401).json({ message: "Incorrect password" });
-      return;
+      return res.status(401).json({ message: "Incorrect password" });
     }
-    await user.destroy();
+    await client.query(
+      `DELETE FROM "users" WHERE "id"='${req.userId}'`
+    );
     return res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Failed to delete user" });
   }
-};
+}
 
 export default {
   signUp,
   logIn,
-  verifEmail,
-  resendVerifiy,
+  receviedVerifyEmail,
+  resendVerifiyEmail,
   updateUser,
   deleteUser
 }

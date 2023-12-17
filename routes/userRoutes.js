@@ -15,8 +15,8 @@ userRouter.get('/test', (req, res)=>{
 // User
 userRouter.post('/signup', user.signUp);
 userRouter.post('/login', user.logIn);
-userRouter.get('/verify/:code', user.verifEmail);
-userRouter.get('/resend-verify', user.resendVerifiy);
+userRouter.get('/verify/:code', user.receviedVerifyEmail);
+userRouter.get('/resend-verify', user.resendVerifiyEmail);
 userRouter.put('/update-user', authUser, user.updateUser);
 userRouter.delete('/delete-user', authUser, user.deleteUser);
 
@@ -25,10 +25,9 @@ userRouter.get('/all-products', product.showProducts);
 
 
 // Cart
-// userRouter.get('/create-cart', authUser, cart.createCart);
-// userRouter.put('/update-cart', authUser, cart.updateCart);
 userRouter.get('/show-carts', authUser, cart.showUserCarts);
 userRouter.delete('/delete-cart', authUser, cart.deleteCart);
+userRouter.put('/pay-cart', authUser, cart.payment);
 
 // Items in Cart
 userRouter.post('/add-item-cart', authUser, cartItems.addItem);

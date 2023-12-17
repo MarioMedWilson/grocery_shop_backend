@@ -3,8 +3,6 @@ import bodyParser from "body-parser";
 import morgan from "morgan";
 import cors from "cors";
 
-
-import createTables from "./database/createTables.js"
 import routes  from "./routes/routes.js";
 
 const app = express();

@@ -1,33 +1,31 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import Seller from "../models/seller.js";
+import client from "../database/connection.js";
 
-dotenv.config();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const JWT_SECRET = process.env.JWT_SECRET_ADMIN;
 
 export const authSeller = async (req, res, next) => {
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-  if (!token) {
-    return res.status(404).json("No token found!");
-  }
   try {
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (!token) {
+      return res.status(404).json("No token found!");
+    }
     const decoded = jwt.verify(token, JWT_SECRET);
-    const seller = await Seller.findOne({
-      where: {
-        id: decoded.id,
-      },
-    });
-    if (!seller) {
+    const seller = await client.query(
+      `SELECT * FROM "sellers" WHERE "id"='${decoded.id}'`
+    );
+    if (!seller.rows[0]) {
       return res.status(404).json("No seller found!");
     }
-    req.sellerId = seller.id;
+    req.sellerId = seller.rows[0].id;
     return next();
   } catch (error) {
     console.error(error);
