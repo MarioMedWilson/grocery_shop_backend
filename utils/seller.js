@@ -65,7 +65,7 @@ const verifEmail = async function (data){
         <p>Dear Mr./Ms.</p>
         <p>Thank you for signing up with our service. To complete your registration, of User <strong> ${data.name}</strong>
         please click the link below to verify your email address:</p>
-        <p><a href="${`${api}/seller/verify/${data.verifyToken}`}" target="_blank">Verify Email Address</a></p>
+        <p><a href="${`${api}/seller/verify/${data.verify_token}`}" target="_blank">Verify Email Address</a></p>
         <p>If you did not sign up for this service, you can safely ignore this email.</p>
         <p>Best regards,</p>
         <p>Grocery Shop</p>

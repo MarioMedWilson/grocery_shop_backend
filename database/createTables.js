@@ -18,7 +18,7 @@ const createTables = async () => {
         "name" VARCHAR(100) NOT NULL,
         "email" VARCHAR(100) NOT NULL UNIQUE,
         "password" VARCHAR(100) NOT NULL,
-        "verifyToken" VARCHAR(100),
+        "verify_token" VARCHAR(100),
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )`
@@ -29,7 +29,7 @@ const createTables = async () => {
         "name" VARCHAR(100) NOT NULL,
         "email" VARCHAR(100) NOT NULL UNIQUE,
         "password" VARCHAR(100) NOT NULL,
-        "verifyToken" VARCHAR(100),
+        "verify_token" VARCHAR(100),
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )`
@@ -39,10 +39,11 @@ const createTables = async () => {
         "id" SERIAL PRIMARY KEY,
         "product_name" VARCHAR(100) NOT NULL,
         "brand_name" VARCHAR(100) NOT NULL,
-        "quantityInStock" INTEGER NOT NULL,
+        "quantity_in_stock" INTEGER NOT NULL,
+        "image" VARCHAR(255) NOT NULL,
         "price" DECIMAL(10,3) NOT NULL,
-        "sellerId" INTEGER REFERENCES "sellers"("id"),
-        "brandNationalityId" INTEGER REFERENCES "brand_nationalities"("id"),
+        "user_id" INTEGER REFERENCES "users"("id"),
+        "brand_nationality_id" INTEGER REFERENCES "brand_nationalities"("id"),
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )`
@@ -50,8 +51,8 @@ const createTables = async () => {
     await client.query(
       `CREATE TABLE IF NOT EXISTS "shopping_carts" (
         "id" SERIAL PRIMARY KEY,
-        "totalPrice" INTEGER NOT NULL,
-        "userId" INTEGER REFERENCES "users"("id"),
+        "total_price" INTEGER NOT NULL,
+        "user_id" INTEGER REFERENCES "users"("id"),
         "payment" BOOLEAN DEFAULT FALSE,
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -60,8 +61,8 @@ const createTables = async () => {
     await client.query(
       `CREATE TABLE IF NOT EXISTS "shopping_cart_items" (
         "id" SERIAL PRIMARY KEY,
-        "productId" INTEGER REFERENCES "products"("id"),
-        "shoppingCartId" INTEGER REFERENCES "shopping_carts"("id"),
+        "product_id" INTEGER REFERENCES "products"("id"),
+        "shopping_cart_id" INTEGER REFERENCES "shopping_carts"("id"),
         "quantity" INTEGER NOT NULL,
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL

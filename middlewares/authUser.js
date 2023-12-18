@@ -18,7 +18,7 @@ export const authUser = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
     }
     if (!token) {
-      res.status(404).json("No token found!");
+      return res.status(404).json({message: "No token found!"});
     }
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await client.query(
@@ -26,12 +26,12 @@ export const authUser = async (req, res, next) => {
     );
 
     if (!user.rows[0]) {
-      return res.status(404).json("No user found!");
+      return res.status(404).json({message: "No user found!"});
     }
-    req.userId = user.rows[0].id;
+    req.user_id = user.rows[0].id;
     return next();
   } catch (error) {
     console.error(error);
-    return res.status(401).json("Invalid token!");
+    return res.status(401).json({message: "Invalid token!", error});
   }
 };

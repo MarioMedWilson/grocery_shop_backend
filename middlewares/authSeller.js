@@ -16,20 +16,20 @@ export const authSeller = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
     }
     if (!token) {
-      return res.status(404).json("No token found!");
+      return res.status(404).json({message: "No token found!"});
     }
     const decoded = jwt.verify(token, JWT_SECRET);
     const seller = await client.query(
       `SELECT * FROM "sellers" WHERE "id"='${decoded.id}'`
     );
     if (!seller.rows[0]) {
-      return res.status(404).json("No seller found!");
+      return res.status(404).json({message: "No seller found!"});
     }
-    req.sellerId = seller.rows[0].id;
+    req.user_id = seller.rows[0].id;
     return next();
   } catch (error) {
     console.error(error);
-    return res.status(401).json("Invalid token!");
+    return res.status(401).json({message: "Invalid token!", error});
   }
 };
 

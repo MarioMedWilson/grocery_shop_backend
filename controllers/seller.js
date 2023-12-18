@@ -10,17 +10,17 @@ const { generateToken, verifEmail, validPassword, changePassword } = sellerModul
 const signUp = async (req, res) => {
   const seller = req.body;
   try {
-    const verifyToken = await cryptoRandomString({length: 100});
-    seller.verifyToken = verifyToken;
+    const verify_token = await cryptoRandomString({length: 100});
+    seller.verify_token = verify_token;
     seller.password = await changePassword(seller.password);
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const updatedAt = createdAt;
     await client.query(
-      `INSERT INTO "sellers" ("name", "email", "password", "verifyToken", "createdAt", "updatedAt") VALUES (
+      `INSERT INTO "sellers" ("name", "email", "password", "verify_token", "createdAt", "updatedAt") VALUES (
         '${seller.name}', 
         '${seller.email}', 
         '${seller.password}', 
-        '${seller.verifyToken}',
+        '${seller.verify_token}',
         '${createdAt}',
         '${updatedAt}')`
     );
@@ -49,7 +49,7 @@ const logIn = async (req, res) => {
       res.status(401).json({ message: "Invalid password" });
       return;
     }
-    if (seller.rows[0].verifyToken != null){
+    if (seller.rows[0].verify_token != null){
       res.status(401).json({ message: "Email is not verified" });
       return;
     }
@@ -66,14 +66,14 @@ const receviedVerifyEmail = async (req, res) => {
   const code = req.params.code
   try{
     const seller = await client.query(
-      `SELECT * FROM "sellers" WHERE "verifyToken"='${code}'`
+      `SELECT * FROM "sellers" WHERE "verify_token"='${code}'`
     );
     if (seller.rows[0] == null){
       return res.status(401).json({message: "No Seller found."})
     }
-    seller.rows[0].verifyToken = null;
+    seller.rows[0].verify_token = null;
     await client.query(
-      `UPDATE "sellers" SET "verifyToken"=null WHERE "verifyToken"='${code}'`
+      `UPDATE "sellers" SET "verify_token"=null WHERE "verify_token"='${code}'`
     );
     return res.status(200).json({message: "Successfully verifived the email."});
   }catch (error){
@@ -94,7 +94,7 @@ const resendVerifiyEmail = async (req, res)=> {
   if (seller.rows[0] == null){
     return res.status(404).json({message: "No email found."})
   }
-  if (seller.rows[0].verifyToken==null){
+  if (seller.rows[0].verify_token==null){
     return res.status(200).json({message: "Seller email is already verified."})
   }
   verifEmail(seller.rows[0]);
@@ -105,7 +105,7 @@ const updateSeller = async (req, res) => {
   var { name, email, password, confirmPassword } = req.body;
   try {
     const seller = await client.query(
-      `SELECT * FROM "sellers" WHERE "id"='${req.sellerId}'`
+      `SELECT * FROM "sellers" WHERE "id"='${req.user_id}'`
     );
     if (seller.rows[0] == null){
       return res.status(404).json({ message: "Seller not found." });
@@ -113,7 +113,7 @@ const updateSeller = async (req, res) => {
     if (password != confirmPassword){
       return res.status(401).json({ message: "Password and confirm password are not the same" });
     };
-    if (seller.rows[0].verifyToken != null){
+    if (seller.rows[0].verify_token != null){
       return res.status(401).json({ message: "Email is not verified" });
     }
     if (seller.rows[0].email != email){
@@ -121,17 +121,17 @@ const updateSeller = async (req, res) => {
     };
     if (name){
       await client.query(
-        `UPDATE "sellers" SET "name"='${name}' WHERE "id"='${req.sellerId}'`
+        `UPDATE "sellers" SET "name"='${name}' WHERE "id"='${req.user_id}'`
       );
     }
     if (password){
       password = await changePassword(password);
       await client.query(
-        `UPDATE "sellers" SET "password"='${password}' WHERE "id"='${req.sellerId}'`
+        `UPDATE "sellers" SET "password"='${password}' WHERE "id"='${req.user_id}'`
       );
     }
     const updatedSeller = await client.query(
-      `SELECT * FROM "sellers" WHERE "id"='${req.sellerId}'`
+      `SELECT * FROM "sellers" WHERE "id"='${req.user_id}'`
     );
     return res.status(200).json({ message: "Seller updated successfully", seller: updatedSeller.rows[0] });
   } catch (error) {
@@ -144,7 +144,7 @@ const deleteSeller = async (req, res) => {
   const { email, password } = req.body;
   try {
     const seller = await client.query(
-      `SELECT * FROM "sellers" WHERE "id"='${req.sellerId}'`
+      `SELECT * FROM "sellers" WHERE "id"='${req.user_id}'`
     );
     if (seller.rows[0] == null){
       return res.status(404).json({ message: "Seller not found." });
@@ -157,7 +157,7 @@ const deleteSeller = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
     await client.query(
-      `DELETE FROM "sellers" WHERE "id"='${req.sellerId}'`
+      `DELETE FROM "sellers" WHERE "id"='${req.user_id}'`
     );
     return res.status(200).json({ message: "Seller deleted successfully" });
   } catch (error) {

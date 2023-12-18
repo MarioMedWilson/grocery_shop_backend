@@ -1,13 +1,15 @@
 
 import client from "../database/connection.js";
+import countries from "./countries.js";
 
 const addNewProduct = async (req, res) => {
   const {
         product_name, 
         brand_name, 
-        brandNationalityId, 
+        brand_nationality_id, 
         price, 
-        quantityInStock
+        quantity_in_stock,
+        image
       } = req.body;
   if (!product_name){
     return res.status(401).json({messgae: "Product name must be added"})
@@ -15,13 +17,13 @@ const addNewProduct = async (req, res) => {
   if (!brand_name){
     return res.status(401).json({messgae: "Brand name must be added"})
   }
-  if (!brandNationalityId){
+  if (!brand_nationality_id){
     return res.status(401).json({messgae: "Brand nationality must be added"})
   }
   if (!price){
     return res.status(401).json({messgae: "Price must be added"})
   }
-  if (!quantityInStock){
+  if (!quantity_in_stock){
     return res.status(401).json({messgae: "Quantity must be added"})
   }
   try{
@@ -31,19 +33,21 @@ const addNewProduct = async (req, res) => {
       `INSERT INTO "products" (
         "product_name", 
         "brand_name", 
-        "brandNationalityId", 
+        "brand_nationality_id", 
         "price", 
-        "quantityInStock", 
-        "sellerId",
+        "quantity_in_stock",
+        "user_id",
+        "image",
         "createdAt",
         "updatedAt")
          VALUES (
           '${product_name}', 
           '${brand_name}', 
-          '${brandNationalityId}', 
+          '${brand_nationality_id}', 
           '${price}', 
-          '${quantityInStock}', 
-          '${req.sellerId}',
+          '${quantity_in_stock}', 
+          '${req.user_id}',
+          '${image}',
           '${createdAt}',
           '${updatedAt}'
           ) RETURNING *`
@@ -68,7 +72,7 @@ const deleteProduct = async (req, res) => {
     if (product.rows[0] == null){
       return res.status(401).json({message: "No product found"});
     }
-    if (product.rows[0].sellerId != req.sellerId){
+    if (product.rows[0].user_id != req.user_id){
       return res.status(402).json({message: "Not authorized to delete this product"});
     }
     await client.query(
@@ -83,7 +87,7 @@ const deleteProduct = async (req, res) => {
 
 
 const updateProduct = async (req, res) => {
-  const { id, product_name, brand_name, brandNationalityId, price, quantityInStock } = req.body;
+  const { id, product_name, brand_name, brand_nationality_id, price, quantity_in_stock, image } = req.body;
 
   if (!id) {
     return res.status(401).json({ message: "ID product must be added" });
@@ -93,7 +97,7 @@ const updateProduct = async (req, res) => {
     if (product.rows[0] == null) {
       return res.status(404).json({ message: "No product found" });
     }
-    if (product.rows[0].sellerId != req.sellerId) {
+    if (product.rows[0].user_id != req.user_id) {
       return res.status(401).json({ message: "Not authorized to update this product" });
     }
     const updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -104,14 +108,17 @@ const updateProduct = async (req, res) => {
     if (brand_name) {
       updates.push(`"brand_name"='${brand_name}'`);
     }
-    if (brandNationalityId) {
-      updates.push(`"brandNationalityId"='${brandNationalityId}'`);
+    if (brand_nationality_id) {
+      updates.push(`"brand_nationality_id"='${brand_nationality_id}'`);
     }
     if (price) {
       updates.push(`"price"='${price}'`);
     }
-    if (quantityInStock) {
-      updates.push(`"quantityInStock"='${quantityInStock}'`);
+    if (image) {
+      updates.push(`"image"='${image}'`);
+    }
+    if (quantity_in_stock) {
+      updates.push(`"quantity_in_stock"='${quantity_in_stock}'`);
     }
 
     if (updates.length > 0) {
@@ -137,24 +144,68 @@ const showProducts = async (req, res) => {
     const products = await client.query(
       `SELECT * FROM "products"`
     );
-    return res.status(200).json({message: "Successfully to fetch products.", products: products.rows})
+    const country = await client.query(
+      `SELECT * FROM "brand_nationalities"`
+    );
+    const user = await client.query(
+      `SELECT * FROM "users"`
+    );
+    for (let i = 0; i < products.rows.length; i++){
+      for (let j = 0; j < country.rows.length; j++){
+        if  (products.rows[i].brand_nationality_id == country.rows[j].id){
+          products.rows[i].country = country.rows[j];
+        }
+      }
+      for (let j = 0; j < user.rows.length; j++){
+        if  (products.rows[i].user_id == user.rows[j].id){
+          products.rows[i].user = {
+            id: user.rows[j].id,
+            name: user.rows[j].name,
+            email: user.rows[j].email
+        };
+        }
+      }
+    }
+    return res.status(200).json({products: products.rows})
   } catch (error){
-    return res.status(500).json({message: "Failed to fetch the products."})
+    return res.status(500).json({message: "Failed to fetch the products.", error})
   }
 };
 
 
 const showProductsSeller = async (req, res) => {
-  if (!req.sellerId){
+  if (!req.user_id){
     return res.status(404).json({message: "No authorization to find the products of this seller."}) 
   }
   try{
     const products = await client.query(
-      `SELECT * FROM "products" WHERE "sellerId"='${req.sellerId}'`
+      `SELECT * FROM "products" WHERE "user_id"='${req.user_id}'`
     );
-    return res.status(200).json({message: "Successfully to fetch products.", products: products.rows})
+    const country = await client.query(
+      `SELECT * FROM "brand_nationalities"`
+    );
+    const user = await client.query(
+      `SELECT * FROM "users"`
+    );
+    for (let i = 0; i < products.rows.length; i++){
+      for (let j = 0; j < country.rows.length; j++){
+        if  (products.rows[i].brand_nationality_id == country.rows[j].id){
+          products.rows[i].country = country.rows[j];
+        }
+      }
+      for (let j = 0; j < user.rows.length; j++){
+        if  (products.rows[i].user_id == user.rows[j].id){
+          products.rows[i].user = {
+            id: user.rows[j].id,
+            name: user.rows[j].name,
+            email: user.rows[j].email
+        };
+        }
+      }
+    }
+    return res.status(200).json({products: products.rows})
   }catch (error){
-    return res.status(500).json({message: "Failed to fetch the products."})
+    return res.status(500).json({message: "Failed to fetch the products.", error})
   }
 };
 

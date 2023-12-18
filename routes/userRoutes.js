@@ -16,23 +16,26 @@ userRouter.get('/test', (req, res)=>{
 userRouter.post('/signup', user.signUp);
 userRouter.post('/login', user.logIn);
 userRouter.get('/verify/:code', user.receviedVerifyEmail);
-userRouter.get('/resend-verify', user.resendVerifiyEmail);
-userRouter.put('/update-user', authUser, user.updateUser);
-userRouter.delete('/delete-user', authUser, user.deleteUser);
+userRouter.get('/resend/verify', user.resendVerifiyEmail);
+userRouter.put('/user', authUser, user.updateUser);
+userRouter.delete('/user', authUser, user.deleteUser);
 
-// Products
-userRouter.get('/all-products', product.showProducts);
 
+// Product
+userRouter.post('/product', authUser, product.addNewProduct);
+userRouter.delete('/product', authUser, product.deleteProduct);
+userRouter.put('/product', authUser, product.updateProduct);
+userRouter.get('/user/products', authUser, product.showProductsSeller);
 
 // Cart
-userRouter.get('/show-carts', authUser, cart.showUserCarts);
-userRouter.delete('/delete-cart', authUser, cart.deleteCart);
-userRouter.put('/pay-cart', authUser, cart.payment);
+userRouter.get('/carts', authUser, cart.showUserCarts);
+userRouter.delete('/cart', authUser, cart.deleteCart);
+userRouter.put('/payment', authUser, cart.payment);
 
 // Items in Cart
-userRouter.post('/add-item-cart', authUser, cartItems.addItem);
-userRouter.get('/show-items-cart', authUser, cartItems.showItemsInCart);
-userRouter.put('/update-item-cart', authUser, cartItems.updateItem);
-userRouter.delete('/delete-item-cart', authUser, cartItems.removeItem);
+userRouter.post('/item', authUser, cartItems.addItem);
+userRouter.get('/items', authUser, cartItems.showItemsInCart);
+userRouter.put('/item', authUser, cartItems.updateItem);
+userRouter.delete('/item', authUser, cartItems.removeItem);
 
 export default userRouter;

@@ -10,17 +10,17 @@ import bcrypt from "bcrypt";
 const signUp = async (req, res) => {
   const user = req.body;
   try {
-    const verifyToken = await cryptoRandomString({length: 100});
-    user.verifyToken = verifyToken;
+    const verify_token = await cryptoRandomString({length: 100});
+    user.verify_token = verify_token;
     user.password = await changePassword(user.password);
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const updatedAt = createdAt;
     await client.query(
-      `INSERT INTO "users" ("name", "email", "password", "verifyToken", "createdAt", "updatedAt") VALUES (
+      `INSERT INTO "users" ("name", "email", "password", "verify_token", "createdAt", "updatedAt") VALUES (
         '${user.name}', 
         '${user.email}', 
         '${user.password}', 
-        '${user.verifyToken}',
+        '${user.verify_token}',
         '${createdAt}',
         '${updatedAt}')`
     );
@@ -48,7 +48,7 @@ const logIn = async (req, res) => {
       res.status(401).json({ message: "Invalid password" });
       return;
     }
-    if (user.rows[0].verifyToken != null){
+    if (user.rows[0].verify_token != null){
       res.status(401).json({ message: "Email is not verified" });
       return;
     }
@@ -65,14 +65,14 @@ const receviedVerifyEmail = async (req, res) => {
   const code = req.params.code
   try{
     const user = await client.query(
-      `SELECT * FROM "users" WHERE "verifyToken"='${code}'`
+      `SELECT * FROM "users" WHERE "verify_token"='${code}'`
     );
     if (user.rows[0] == null){
       return res.status(401).json({message: "No User found."})
     }
-    user.rows[0].verifyToken = null;
+    user.rows[0].verify_token = null;
     await client.query(
-      `UPDATE "users" SET "verifyToken"=null WHERE "verifyToken"='${code}'`
+      `UPDATE "users" SET "verify_token"=null WHERE "verify_token"='${code}'`
     );
     return res.status(200).json({message: "Successfully verifived the email."});
   }catch (error){
@@ -92,7 +92,7 @@ const resendVerifiyEmail = async (req, res)=> {
   if (user.rows[0] == null){
     return res.status(404).json({message: "No email found."})
   }
-  if (user.rows[0].verifyToken==null){
+  if (user.rows[0].verify_token==null){
     return res.status(200).json({message: "User email is already verified."})
   }
   verifEmail(user.rows[0]);
@@ -103,7 +103,7 @@ const updateUser = async (req, res) => {
   var { name, email, password, confirmPassword } = req.body;
   try {
     const user = await client.query(
-      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+      `SELECT * FROM "users" WHERE "id"='${req.user_id}'`
     );
     if (user.rows[0] == null){
       return res.status(404).json({ message: "User not found." });
@@ -111,7 +111,7 @@ const updateUser = async (req, res) => {
     if (password != confirmPassword){
       return res.status(401).json({ message: "Password and confirm password are not the same" });
     };
-    if (user.rows[0].verifyToken != null){
+    if (user.rows[0].verify_token != null){
       return res.status(401).json({ message: "Email is not verified" });
     }
     if (user.rows[0].email != email){
@@ -119,17 +119,17 @@ const updateUser = async (req, res) => {
     };
     if (name){
       await client.query(
-        `UPDATE "users" SET "name"='${name}' WHERE "id"='${req.userId}'`
+        `UPDATE "users" SET "name"='${name}' WHERE "id"='${req.user_id}'`
       );
     }
     if (password){
       password = await changePassword(password);
       await client.query(
-        `UPDATE "users" SET "password"='${password}' WHERE "id"='${req.userId}'`
+        `UPDATE "users" SET "password"='${password}' WHERE "id"='${req.user_id}'`
       );
     }
     const updatedUser = await client.query(
-      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+      `SELECT * FROM "users" WHERE "id"='${req.user_id}'`
     );
     return res.status(200).json({ message: "User updated successfully", user: updatedUser.rows[0] });
   } catch (error) {
@@ -141,7 +141,7 @@ const deleteUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await client.query(
-      `SELECT * FROM "users" WHERE "id"='${req.userId}'`
+      `SELECT * FROM "users" WHERE "id"='${req.user_id}'`
     );
     if (user.rows[0] == null){
       return res.status(404).json({ message: "User not found." });
@@ -154,7 +154,7 @@ const deleteUser = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
     await client.query(
-      `DELETE FROM "users" WHERE "id"='${req.userId}'`
+      `DELETE FROM "users" WHERE "id"='${req.user_id}'`
     );
     return res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {

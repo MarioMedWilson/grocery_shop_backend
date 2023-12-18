@@ -3,7 +3,6 @@ import app from "./app.js";
 import createTables from "./database/createTables.js";
 import seedCountries from "./seeder/countries.js";
 import dropTables from "./database/dropTables.js";
-import seedSellers from "./seeder/sellers.js";
 import seedUsers from "./seeder/users.js";
 import seedProducts from "./seeder/products.js";
 
@@ -14,7 +13,6 @@ const port = process.env.PORT || 3000;
 // dropTables();
 // createTables();
 // seedCountries();
-// seedSellers();
 // seedUsers();
 // seedProducts();
 
