@@ -22,20 +22,20 @@ userRouter.delete('/user', authUser, user.deleteUser);
 
 
 // Product
-userRouter.post('/product', authUser, product.addNewProduct);
-userRouter.delete('/product', authUser, product.deleteProduct);
-userRouter.put('/product', authUser, product.updateProduct);
+userRouter.post('/products', authUser, product.addNewProduct);
+userRouter.delete('/products', authUser, product.deleteProduct);
+userRouter.put('/products', authUser, product.updateProduct);
 userRouter.get('/user/products', authUser, product.showProductsSeller);
 
 // Cart
 userRouter.get('/carts', authUser, cart.showUserCarts);
-userRouter.delete('/cart', authUser, cart.deleteCart);
-userRouter.put('/payment', authUser, cart.payment);
+userRouter.delete('/carts', authUser, cart.deleteCart);
+userRouter.put('/payments', authUser, cart.payment);
 
 // Items in Cart
-userRouter.post('/item', authUser, cartItems.addItem);
+userRouter.post('/items', authUser, cartItems.addItem);
 userRouter.get('/items', authUser, cartItems.showItemsInCart);
-userRouter.put('/item', authUser, cartItems.updateItem);
-userRouter.delete('/item', authUser, cartItems.removeItem);
+userRouter.put('/items', authUser, cartItems.updateItem);
+userRouter.delete('/items', authUser, cartItems.removeItem);
 
 export default userRouter;
