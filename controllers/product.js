@@ -1,6 +1,10 @@
 
 import client from "../database/connection.js";
 import countries from "./countries.js";
+import base64 from 'base-64';
+import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+
+import storageRef from "../database/firebase.js";
 
 const addNewProduct = async (req, res) => {
   const {
@@ -26,7 +30,18 @@ const addNewProduct = async (req, res) => {
   if (!quantity_in_stock){
     return res.status(401).json({messgae: "Quantity must be added"})
   }
+  if (!image){
+    return res.status(401).json({messgae: "Image must be added"})
+  }
   try{
+    let downloadURL = '';
+    const imageRef = ref(storageRef, 'images/' + generateUniqueFileName(product_name, brand_name));
+    await uploadString(imageRef, image, 'data_url').then(async (snapshot) => {
+      downloadURL = await getDownloadURL(imageRef);
+    }).catch((error) => {
+      console.error('Error uploading to Firebase Storage:', error);
+      return res.status(500).json({message: "Failed to upload image of product", error: error})
+    }); 
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const updatedAt = createdAt;
     const product = await client.query(
@@ -47,18 +62,21 @@ const addNewProduct = async (req, res) => {
           '${price}', 
           '${quantity_in_stock}', 
           '${req.user_id}',
-          '${image}',
+          '${downloadURL}',
           '${createdAt}',
           '${updatedAt}'
           ) RETURNING *`
     );
-    
     return res.status(200).json({message: "Product added successfully", product: product.rows[0]});
   }catch (error){
     console.log(error)
     return res.status(500).json({messgae: "Faild to add the product", error: error})
   }
 };
+
+function generateUniqueFileName(product_name, brand_name) {
+  return `${product_name}_${brand_name}` + Date.now();
+}
 
 const deleteProduct = async (req, res) => {
   const { id } = req.body;

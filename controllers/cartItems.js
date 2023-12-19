@@ -154,17 +154,23 @@ const showItemsInCart = async (req, res) => {
       return res.status(404).json({message: "No items in cart."});
     }
     var product = await client.query(
-      `SELECT * FROM "products" WHERE "id"='${items.rows[0].product_id}'`
+      `SELECT * FROM "products"`
     );
     var shopping_cart = await client.query(
       `SELECT * FROM "shopping_carts" WHERE "id"='${items.rows[0].shopping_cart_id}'`
     );
-    var country = await client.query(
-      `SELECT * FROM "brand_nationalities" WHERE "id"='${product.rows[0].brand_nationality_id}'`
-    );
-    items.rows[0].product = product.rows[0];
-    items.rows[0].shopping_cart = shopping_cart.rows[0];
-    items.rows[0].product.country = country.rows[0];
+    for (let i = 0; i < items.rows.length; i++){
+      for (let j = 0; j < product.rows.length; j++){
+        if  (items.rows[i].product_id == product.rows[j].id){
+          items.rows[i].product = product.rows[j];
+        }
+      }
+      for (let j = 0; j < shopping_cart.rows.length; j++){
+        if  (items.rows[i].shopping_cart_id == shopping_cart.rows[j].id){
+          items.rows[i].shopping_cart = shopping_cart.rows[j];
+        }
+      }
+    }
     return res.status(200).json({items: items.rows, Total_Price: cart.rows[0].total_price});
   }catch (error){
     console.log(error)
