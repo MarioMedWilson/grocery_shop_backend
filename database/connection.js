@@ -14,6 +14,10 @@ const client = new Client({
   idleTimeoutMillis: 30000
 });
 
+client.on('error', (err) => {
+  console.error('PostgreSQL client error:', err.message);
+});
+
 client.connect(function(err) {
   if (err) {
     console.error('error connecting: ' + err.stack);
