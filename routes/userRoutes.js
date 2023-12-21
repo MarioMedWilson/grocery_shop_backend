@@ -30,7 +30,7 @@ userRouter.get('/user/products', authUser, product.showProductsSeller);
 // Cart
 userRouter.get('/carts', authUser, cart.showUserCarts);
 userRouter.delete('/carts', authUser, cart.deleteCart);
-userRouter.put('/payments', authUser, cart.payment);
+userRouter.post('/payments', authUser, cart.payment);
 
 // Items in Cart
 userRouter.post('/items', authUser, cartItems.addItem);
