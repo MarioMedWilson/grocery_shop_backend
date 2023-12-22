@@ -12,7 +12,7 @@ const createCart = async (user_id) => {
       `SELECT * FROM "shopping_carts" WHERE "user_id"='${user_id}' AND "payment"='${false}'`
     );
     if (!cart.rows[0]){
-      const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      const createdAt = getCurrentDateTime();
       const updatedAt = createdAt;
       cart = await client.query(
         `INSERT INTO "shopping_carts" ("total_price", "user_id", "createdAt", "updatedAt") VALUES (
@@ -34,7 +34,7 @@ const updateCart = async (id, total_price) => {
     return false
   }
   try{
-    const updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const updatedAt = getCurrentDateTime();
     const cart = await client.query(
       `UPDATE "shopping_carts" SET "total_price"='${total_price}', "updatedAt"='${updatedAt}' WHERE "id"='${id}' RETURNING *`
     );
