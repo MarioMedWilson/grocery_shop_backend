@@ -1,6 +1,10 @@
 // import Cart from "../models/cart.js";
 import client from "../database/connection.js";
 
+// Function to get the current date and time in a consistent format
+const getCurrentDateTime = () => {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+};
 
 const createCart = async (user_id) => {
   try {
