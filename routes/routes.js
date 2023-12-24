@@ -11,6 +11,9 @@ app.use('/', userRouter);
 app.get('/countries', countries.countriesData);
 app.get('/products', product.showProducts);
 
+// New route for delivery
+// router.post('/schedule_delivery', deliveryController.scheduleDelivery);
+
 app.use((req, res, next) => {
   return res.status(404).json({ message: 'Endpoint not found' });
 });
